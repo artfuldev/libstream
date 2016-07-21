@@ -33,60 +33,59 @@ typedef struct byte_stream stream_of_byte;
 typedef struct byte_stream stream_listener_of_byte;
 
 void
-stream_next(stream_of_byte *stream, byte v) {
+stream_of_byte_next(stream_of_byte *stream, byte v) {
 	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
-		listener->next(&listener, v);
+		listener->next(listener, v);
 	}
 };
 
 void
-stream_error(stream_of_byte *stream, byte e) {
+stream_of_byte_error(stream_of_byte *stream, byte e) {
 	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
-		listener->error(&listener, e);
+		listener->error(listener, e);
 	}
 };
 
 void
-stream_complete(stream_of_byte *stream) {
+stream_of_byte_complete(stream_of_byte *stream) {
 	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
-		listener->complete(&listener);
+		listener->complete(listener);
 	}
 };
 
 stream_of_byte*
-stream_create() {
+stream_of_byte_create() {
 	stream_of_byte* stream = xmalloc(sizeof(stream_of_byte));
 	stream->id = counter_stream++;
 	varray_init(&(stream->listeners));
-	stream->next = stream_next;
-	stream->error = stream_error;
-	stream->complete = stream_complete;
+	stream->next = stream_of_byte_next;
+	stream->error = stream_of_byte_error;
+	stream->complete = stream_of_byte_complete;
 	return stream;
 }
 
 stream_listener_of_byte*
-stream_create_listener() {
+stream_listener_of_byte_create() {
 	stream_listener_of_byte* stream = xmalloc(sizeof(stream_listener_of_byte));
 	stream->id = counter_stream++;
 	varray_init(&(stream->listeners));
-	stream->next = stream_next;
-	stream->error = stream_error;
-	stream->complete = stream_complete;
+	stream->next = stream_of_byte_next;
+	stream->error = stream_of_byte_error;
+	stream->complete = stream_of_byte_complete;
 	return stream;
 }
 
 stream_listener_of_byte*
 stream_add_listener(stream_of_byte *stream, stream_listener_of_byte *listener) {
-	printf("received");
 	varray* array = stream->listeners;
 	varray_push(array, listener);
 	int length = varray_length(array);
@@ -97,7 +96,49 @@ stream_add_listener(stream_of_byte *stream, stream_listener_of_byte *listener) {
 
 #pragma region Operators
 
+typedef byte (*mapper_function_from_byte_to_byte)(byte value);
 
+struct mapped_byte_stream {
+	int id;
+	void(*next)(struct byte_stream *self, byte v);
+	void(*error)(struct byte_stream *self, byte e);
+	void(*complete)(struct byte_stream *self);
+	varray *listeners;
+	byte(*map)(byte value);
+};
+
+typedef struct mapped_byte_stream mapped_stream_of_byte;
+
+void
+mapped_stream_of_byte_next(stream_of_byte *stream, byte v) {
+	mapped_stream_of_byte* mapped_stream = (mapped_stream_of_byte*)stream;
+	byte mapped = mapped_stream->map(v);
+	varray *array = stream->listeners;
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
+		listener->next(listener, mapped);
+	}
+};
+
+mapped_stream_of_byte*
+mapped_stream_of_byte_create(mapper_function_from_byte_to_byte map) {
+	mapped_stream_of_byte* stream = xmalloc(sizeof(mapped_stream_of_byte));
+	stream->id = counter_stream++;
+	varray_init(&(stream->listeners));
+	stream->next = mapped_stream_of_byte_next;
+	stream->error = stream_of_byte_error;
+	stream->complete = stream_of_byte_complete;
+	stream->map = map;
+	return stream;
+}
+
+stream_of_byte*
+stream_of_byte_map(stream_of_byte *stream, mapper_function_from_byte_to_byte mapper) {
+	mapped_stream_of_byte* mapped_stream = mapped_stream_of_byte_create(mapper);
+	stream_listener_of_byte* mapped_listener = (stream_listener_of_byte*)mapped_stream;
+	return (stream_of_byte*)stream_add_listener(stream, mapped_listener);
+}
 
 #pragma endregion
 
