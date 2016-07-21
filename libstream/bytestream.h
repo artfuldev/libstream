@@ -1,89 +1,96 @@
-#pragma once
+#ifndef INCLUDE_BYTESTREAM_H
+#define INCLUDE_BYTESTREAM_H
 
 typedef unsigned char byte;
 
 #include <stdio.h>
-#include <stdbool.h>
+#include "varray.h"
 
 int counter_stream = 0;
 
-#pragma region Listener
+#pragma region Utils
 
-struct struct_byte_listener {
-	int id;
-	void(*next)(struct struct_byte_listener *self, byte v);
-	void(*error)(struct struct_byte_listener *self, byte e);
-	void(*complete)(struct struct_byte_listener *self);
-};
-
-typedef struct struct_byte_listener ByteListener;
-
-void func_next_listener_default(ByteListener *self, int v) {
-};
-void func_error_listener_default(ByteListener *self, int e) {
-};
-void func_complete_listener_default(ByteListener *self) {
-};
-
-void init_listener(ByteListener *listener) {
-	listener->id = counter_stream++;
-	listener->next = func_next_listener_default;
-	listener->error = func_error_listener_default;
-	listener->complete = func_complete_listener_default;
+void*
+xmalloc(size_t size)
+{
+	void *ret = malloc(size);
+	return ret;
 }
 
 #pragma endregion
 
 #pragma region Stream
 
-struct struct_byte_stream {
+struct byte_stream {
 	int id;
-	void(*next)(struct struct_byte_stream *self, byte v);
-	void(*error)(struct struct_byte_stream *self, byte e);
-	void(*complete)(struct struct_byte_stream *self);
-	ByteListener listeners[20];
+	void(*next)(struct byte_stream *self, byte v);
+	void(*error)(struct byte_stream *self, byte e);
+	void(*complete)(struct byte_stream *self);
+	varray *listeners;
 };
 
-typedef struct struct_byte_stream ByteStream;
+typedef struct byte_stream stream_of_byte;
+typedef struct byte_stream stream_listener_of_byte;
 
-void add_listener_stream(ByteStream *stream, ByteListener *listener) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		i++;
+void
+stream_next(stream_of_byte *stream, byte v) {
+	varray *array = stream->listeners;
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
+		listener->next(&listener, v);
 	}
-	stream->listeners[i] = *listener;
+};
+
+void
+stream_error(stream_of_byte *stream, byte e) {
+	varray *array = stream->listeners;
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
+		listener->error(&listener, e);
+	}
+};
+
+void
+stream_complete(stream_of_byte *stream) {
+	varray *array = stream->listeners;
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_listener_of_byte *listener = ((stream_listener_of_byte *)varray_get(array, i));
+		listener->complete(&listener);
+	}
+};
+
+stream_of_byte*
+stream_create() {
+	stream_of_byte* stream = xmalloc(sizeof(stream_of_byte));
+	stream->id = counter_stream++;
+	varray_init(&(stream->listeners));
+	stream->next = stream_next;
+	stream->error = stream_error;
+	stream->complete = stream_complete;
+	return stream;
 }
 
-void func_next_stream_default(ByteStream *stream, byte v) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].next(&(stream->listeners[i]), v);
-		i++;
-	}
-};
-void func_error_stream_default(ByteStream *stream, byte e) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].error(&(stream->listeners[i]), e);
-		i++;
-	}
-};
-void func_complete_stream_default(ByteStream *stream) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].complete(&(stream->listeners[i]));
-		i++;
-	}
-};
-
-void init_stream(ByteStream *stream) {
+stream_listener_of_byte*
+stream_create_listener() {
+	stream_listener_of_byte* stream = xmalloc(sizeof(stream_listener_of_byte));
 	stream->id = counter_stream++;
-	ByteListener listener = { 2 };
-	init_listener(&listener);
-	add_listener_stream(stream, &listener);
-	stream->next = func_next_stream_default;
-	stream->error = func_error_stream_default;
-	stream->complete = func_complete_stream_default;
+	varray_init(&(stream->listeners));
+	stream->next = stream_next;
+	stream->error = stream_error;
+	stream->complete = stream_complete;
+	return stream;
+}
+
+stream_listener_of_byte*
+stream_add_listener(stream_of_byte *stream, stream_listener_of_byte *listener) {
+	printf("received");
+	varray* array = stream->listeners;
+	varray_push(array, listener);
+	int length = varray_length(array);
+	return (stream_listener_of_byte *)varray_get(array, length - 1);
 }
 
 #pragma endregion
@@ -93,3 +100,5 @@ void init_stream(ByteStream *stream) {
 
 
 #pragma endregion
+
+#endif
