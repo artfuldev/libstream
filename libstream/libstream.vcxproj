@@ -151,8 +151,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bytestream.h" />
-    <ClInclude Include="stdafx.h" />
-    <ClInclude Include="targetver.h" />
+    <ClInclude Include="varray.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libstream.c" />

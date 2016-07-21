@@ -1,77 +1,84 @@
-#pragma once
+#ifndef INCLUDE_BYTESTREAM_H
+#define INCLUDE_BYTESTREAM_H
 
 typedef unsigned char byte;
 
 #include <stdio.h>
-#include <stdbool.h>
+#include "varray.h"
 
 int counter_stream = 0;
 
 #pragma region Stream
 
-#define MAX_ALLOWED_LISTENERS 255
-
-struct struct_byte_stream {
+struct byte_stream {
 	int id;
-	byte subscriptions;
-	void(*next)(struct struct_byte_stream *self, byte v);
-	void(*error)(struct struct_byte_stream *self, byte e);
-	void(*complete)(struct struct_byte_stream *self);
-	struct struct_byte_stream *listeners;
+	void(*next)(struct byte_stream *self, byte v);
+	void(*error)(struct byte_stream *self, byte e);
+	void(*complete)(struct byte_stream *self);
+	varray listeners;
 };
 
+typedef struct byte_stream stream_of_byte;
+typedef struct byte_stream stream_listener_of_byte;
 
-typedef struct struct_byte_stream ByteStream;
-
-ByteStream(*byte_stream_array_pointer)[];
-
-void add_listener_stream(ByteStream *stream, ByteStream *listener) {
-	ByteStream *ptr = stream->listeners;
-	while (ptr) {
-		ptr++;
+void
+stream_next(stream_of_byte *stream, byte v) {
+	varray *array = &(stream->listeners);
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
+		listener->next(&listener, v);
 	}
-	*ptr = *listener;
+};
+
+void
+stream_error(stream_of_byte *stream, byte e) {
+	varray *array = &(stream->listeners);
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
+		listener->error(&listener, e);
+	}
+};
+
+void
+stream_complete(stream_of_byte *stream) {
+	varray *array = &(stream->listeners);
+	int length = varray_length(array);
+	for (int i = 0; i < length; i++) {
+		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
+		listener->complete(&listener);
+	}
+};
+
+stream_of_byte*
+stream_create() {
+	stream_of_byte stream = { 0 };
+	stream.id = counter_stream++;
+	varray_init(&(stream.listeners));
+	stream.next = stream_next;
+	stream.error = stream_error;
+	stream.complete = stream_complete;
+	return &stream;
 }
 
-void func_next_stream_default(ByteStream *stream, byte v) {
-	ByteStream *ptr = stream->listeners;
-	while (ptr) {
-		ptr->next(ptr, v);
-		ptr++;
-	}
-};
-void func_error_stream_default(ByteStream *stream, byte e) {
-	ByteStream *ptr = stream->listeners;
-	while (ptr) {
-		ptr->error(ptr, e);
-		ptr++;
-	}
-};
-void func_complete_stream_default(ByteStream *stream) {
-	ByteStream *ptr = stream->listeners;
-	while (ptr) {
-		ptr->complete(ptr);
-		ptr++;
-	}
-};
-
-void init_stream(ByteStream *stream) {
-	stream->id = counter_stream++;
-	stream->listeners = calloc(MAX_ALLOWED_LISTENERS, sizeof(ByteStream));
-	stream->next = func_next_stream_default;
-	stream->error = func_error_stream_default;
-	stream->complete = func_complete_stream_default;
+stream_listener_of_byte*
+stream_create_listener() {
+	stream_listener_of_byte stream = { 0 };
+	stream.id = counter_stream++;
+	varray_init(&(stream.listeners));
+	stream.next = stream_next;
+	stream.error = stream_error;
+	stream.complete = stream_complete;
+	return &stream;
 }
 
-ByteStream* add_listener(ByteStream *stream, ByteStream *listener) {
-	int listenersCount = stream->subscriptions;
-	ByteStream *ptr = &(stream->listeners);
-	ByteStream *attachedListener = NULL;
-	while (ptr != NULL) {
-		ptr++;
-	}
-	stream->subscriptions++;
-	return attachedListener;
+stream_listener_of_byte*
+stream_add_listener(stream_of_byte *stream, stream_listener_of_byte *listener) {
+	varray *array = &(stream->listeners);
+	varray_push(array, listener);
+	int length = varray_length(array);
+	return (stream_listener_of_byte *)varray_get(array, length - 1);
 }
 
 #pragma endregion
@@ -81,3 +88,5 @@ ByteStream* add_listener(ByteStream *stream, ByteStream *listener) {
 
 
 #pragma endregion
+
+#endif
