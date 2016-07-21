@@ -7,6 +7,8 @@ typedef unsigned char byte;
 
 int counter_stream = 0;
 
+#pragma region Listener
+
 struct struct_byte_listener {
 	int id;
 	void(*next)(struct struct_byte_listener *self, byte v);
@@ -17,13 +19,10 @@ struct struct_byte_listener {
 typedef struct struct_byte_listener ByteListener;
 
 void func_next_listener_default(ByteListener *self, int v) {
-	printf("next called with %d", v);
 };
 void func_error_listener_default(ByteListener *self, int e) {
-	printf("error called with %d", e);
 };
 void func_complete_listener_default(ByteListener *self) {
-	printf("completed called");
 };
 
 void init_listener(ByteListener *listener) {
@@ -32,6 +31,10 @@ void init_listener(ByteListener *listener) {
 	listener->error = func_error_listener_default;
 	listener->complete = func_complete_listener_default;
 }
+
+#pragma endregion
+
+#pragma region Stream
 
 struct struct_byte_stream {
 	int id;
@@ -51,16 +54,14 @@ void add_listener_stream(ByteStream *stream, ByteListener *listener) {
 	stream->listeners[i] = *listener;
 }
 
-void func_next_stream_default(ByteStream *stream, int v) {
-	printf("stream next called with %d", v);
+void func_next_stream_default(ByteStream *stream, byte v) {
 	int i = 0;
 	while (stream->listeners[i].id) {
 		stream->listeners[i].next(&(stream->listeners[i]), v);
 		i++;
 	}
 };
-void func_error_stream_default(ByteStream *stream, int e) {
-	printf("stream error called with %d", e);
+void func_error_stream_default(ByteStream *stream, byte e) {
 	int i = 0;
 	while (stream->listeners[i].id) {
 		stream->listeners[i].error(&(stream->listeners[i]), e);
@@ -68,7 +69,6 @@ void func_error_stream_default(ByteStream *stream, int e) {
 	}
 };
 void func_complete_stream_default(ByteStream *stream) {
-	printf("stream complete called");
 	int i = 0;
 	while (stream->listeners[i].id) {
 		stream->listeners[i].complete(&(stream->listeners[i]));
@@ -85,3 +85,11 @@ void init_stream(ByteStream *stream) {
 	stream->error = func_error_stream_default;
 	stream->complete = func_complete_stream_default;
 }
+
+#pragma endregion
+
+#pragma region Operators
+
+
+
+#pragma endregion
