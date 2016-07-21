@@ -7,83 +7,71 @@ typedef unsigned char byte;
 
 int counter_stream = 0;
 
-#pragma region Listener
-
-struct struct_byte_listener {
-	int id;
-	void(*next)(struct struct_byte_listener *self, byte v);
-	void(*error)(struct struct_byte_listener *self, byte e);
-	void(*complete)(struct struct_byte_listener *self);
-};
-
-typedef struct struct_byte_listener ByteListener;
-
-void func_next_listener_default(ByteListener *self, int v) {
-};
-void func_error_listener_default(ByteListener *self, int e) {
-};
-void func_complete_listener_default(ByteListener *self) {
-};
-
-void init_listener(ByteListener *listener) {
-	listener->id = counter_stream++;
-	listener->next = func_next_listener_default;
-	listener->error = func_error_listener_default;
-	listener->complete = func_complete_listener_default;
-}
-
-#pragma endregion
-
 #pragma region Stream
+
+#define MAX_ALLOWED_LISTENERS 255
 
 struct struct_byte_stream {
 	int id;
+	byte subscriptions;
 	void(*next)(struct struct_byte_stream *self, byte v);
 	void(*error)(struct struct_byte_stream *self, byte e);
 	void(*complete)(struct struct_byte_stream *self);
-	ByteListener listeners[20];
+	struct struct_byte_stream *listeners;
 };
+
 
 typedef struct struct_byte_stream ByteStream;
 
-void add_listener_stream(ByteStream *stream, ByteListener *listener) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		i++;
+ByteStream(*byte_stream_array_pointer)[];
+
+void add_listener_stream(ByteStream *stream, ByteStream *listener) {
+	ByteStream *ptr = stream->listeners;
+	while (ptr) {
+		ptr++;
 	}
-	stream->listeners[i] = *listener;
+	*ptr = *listener;
 }
 
 void func_next_stream_default(ByteStream *stream, byte v) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].next(&(stream->listeners[i]), v);
-		i++;
+	ByteStream *ptr = stream->listeners;
+	while (ptr) {
+		ptr->next(ptr, v);
+		ptr++;
 	}
 };
 void func_error_stream_default(ByteStream *stream, byte e) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].error(&(stream->listeners[i]), e);
-		i++;
+	ByteStream *ptr = stream->listeners;
+	while (ptr) {
+		ptr->error(ptr, e);
+		ptr++;
 	}
 };
 void func_complete_stream_default(ByteStream *stream) {
-	int i = 0;
-	while (stream->listeners[i].id) {
-		stream->listeners[i].complete(&(stream->listeners[i]));
-		i++;
+	ByteStream *ptr = stream->listeners;
+	while (ptr) {
+		ptr->complete(ptr);
+		ptr++;
 	}
 };
 
 void init_stream(ByteStream *stream) {
 	stream->id = counter_stream++;
-	ByteListener listener = { 2 };
-	init_listener(&listener);
-	add_listener_stream(stream, &listener);
+	stream->listeners = calloc(MAX_ALLOWED_LISTENERS, sizeof(ByteStream));
 	stream->next = func_next_stream_default;
 	stream->error = func_error_stream_default;
 	stream->complete = func_complete_stream_default;
+}
+
+ByteStream* add_listener(ByteStream *stream, ByteStream *listener) {
+	int listenersCount = stream->subscriptions;
+	ByteStream *ptr = &(stream->listeners);
+	ByteStream *attachedListener = NULL;
+	while (ptr != NULL) {
+		ptr++;
+	}
+	stream->subscriptions++;
+	return attachedListener;
 }
 
 #pragma endregion
