@@ -4,17 +4,24 @@
 #include <stdio.h>
 #include "bytestream.h"
 
-void printf_next(byte value) {
+void printf_next(stream_of_byte *stream, byte value) {
 	printf("recieved %d\n", value);
 }
 
+byte map_2x(byte value) {
+	return 2 * value;
+}
+
 int main() {
-	stream_of_byte* stream = stream_create();
-	stream_listener_of_byte* listener = stream_create_listener();
+	stream_of_byte* stream = stream_of_byte_create();
+	stream_listener_of_byte* listener = stream_listener_of_byte_create();
 	listener->next = printf_next;
 	stream_add_listener(stream, listener);
+	stream_of_byte* mapped_stream = stream_of_byte_map(stream, map_2x);
+	stream_add_listener(mapped_stream, listener);
 	for (int i = 0; i < 10; i++)
 		stream->next(stream, i);
+	getchar();
 	return 0;
 }
 
