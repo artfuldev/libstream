@@ -9,8 +9,8 @@ void printf_next(byte value) {
 }
 
 int main() {
-	stream_of_byte *stream = stream_create();
-	stream_listener_of_byte *listener = stream_create_listener();
+	stream_of_byte* stream = stream_create();
+	stream_listener_of_byte* listener = stream_create_listener();
 	listener->next = printf_next;
 	stream_add_listener(stream, listener);
 	for (int i = 0; i < 10; i++)

@@ -15,7 +15,7 @@ struct byte_stream {
 	void(*next)(struct byte_stream *self, byte v);
 	void(*error)(struct byte_stream *self, byte e);
 	void(*complete)(struct byte_stream *self);
-	varray listeners;
+	varray *listeners;
 };
 
 typedef struct byte_stream stream_of_byte;
@@ -23,7 +23,7 @@ typedef struct byte_stream stream_listener_of_byte;
 
 void
 stream_next(stream_of_byte *stream, byte v) {
-	varray *array = &(stream->listeners);
+	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
@@ -33,7 +33,7 @@ stream_next(stream_of_byte *stream, byte v) {
 
 void
 stream_error(stream_of_byte *stream, byte e) {
-	varray *array = &(stream->listeners);
+	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
@@ -43,7 +43,7 @@ stream_error(stream_of_byte *stream, byte e) {
 
 void
 stream_complete(stream_of_byte *stream) {
-	varray *array = &(stream->listeners);
+	varray *array = stream->listeners;
 	int length = varray_length(array);
 	for (int i = 0; i < length; i++) {
 		stream_of_byte *listener = ((stream_of_byte *)varray_get(array, i));
@@ -54,8 +54,9 @@ stream_complete(stream_of_byte *stream) {
 stream_of_byte*
 stream_create() {
 	stream_of_byte stream = { 0 };
+	stream_of_byte* ptr = &stream;
 	stream.id = counter_stream++;
-	varray_init(&(stream.listeners));
+	varray_init(&(ptr->listeners));
 	stream.next = stream_next;
 	stream.error = stream_error;
 	stream.complete = stream_complete;
@@ -65,8 +66,9 @@ stream_create() {
 stream_listener_of_byte*
 stream_create_listener() {
 	stream_listener_of_byte stream = { 0 };
+	stream_of_byte* ptr = &stream;
 	stream.id = counter_stream++;
-	varray_init(&(stream.listeners));
+	varray_init(&(ptr->listeners));
 	stream.next = stream_next;
 	stream.error = stream_error;
 	stream.complete = stream_complete;
@@ -75,7 +77,8 @@ stream_create_listener() {
 
 stream_listener_of_byte*
 stream_add_listener(stream_of_byte *stream, stream_listener_of_byte *listener) {
-	varray *array = &(stream->listeners);
+	printf("received");
+	varray* array = stream->listeners;
 	varray_push(array, listener);
 	int length = varray_length(array);
 	return (stream_listener_of_byte *)varray_get(array, length - 1);
