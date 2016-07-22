@@ -24,9 +24,21 @@
     <ClInclude Include="varray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="libstream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="bytestream.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="utils.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="varray.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
