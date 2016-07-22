@@ -150,13 +150,15 @@
     <Text Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="bytestream.h" />
+    <ClInclude Include="stream_of_byte.h" />
+    <ClInclude Include="stream_of_byte_map.h" />
     <ClInclude Include="utils.h" />
     <ClInclude Include="varray.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="bytestream.c" />
+    <ClCompile Include="stream_of_byte.c" />
     <ClCompile Include="libstream.c" />
+    <ClCompile Include="stream_of_byte_map.c" />
     <ClCompile Include="utils.c" />
     <ClCompile Include="varray.c" />
   </ItemGroup>

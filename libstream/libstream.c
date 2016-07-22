@@ -1,8 +1,7 @@
 // libstream.cpp : Defines the entry point for the console application.
 //
 
-#include <stdio.h>
-#include "bytestream.h"
+#include "stream_of_byte.h"
 
 void printf_next(stream_of_byte *stream, byte value) {
 	printf("recieved %d\n", value);
