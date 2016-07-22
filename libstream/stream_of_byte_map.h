@@ -4,7 +4,6 @@
 #include "stream_of_byte.h"
 
 struct mapped_byte_stream {
-	int id;
 	void(*next)(struct byte_stream *self, byte v);
 	void(*error)(struct byte_stream *self, byte e);
 	void(*complete)(struct byte_stream *self);

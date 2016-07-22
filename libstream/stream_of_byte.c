@@ -31,7 +31,6 @@ void stream_of_byte_complete(stream_of_byte *stream) {
 
 stream_of_byte* stream_of_byte_create() {
 	stream_of_byte* stream = xmalloc(sizeof(stream_of_byte));
-	stream->id = counter_stream++;
 	varray_init(&(stream->listeners));
 	stream->next = stream_of_byte_next;
 	stream->error = stream_of_byte_error;

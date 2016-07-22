@@ -13,7 +13,6 @@ void mapped_stream_of_byte_next(stream_of_byte *stream, byte v) {
 
 mapped_stream_of_byte* mapped_stream_of_byte_create(mapper_function_from_byte_to_byte map) {
 	mapped_stream_of_byte* stream = xmalloc(sizeof(mapped_stream_of_byte));
-	stream->id = counter_stream++;
 	varray_init(&(stream->listeners));
 	stream->next = mapped_stream_of_byte_next;
 	stream->error = stream_of_byte_error;
