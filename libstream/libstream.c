@@ -1,8 +1,8 @@
 // libstream.cpp : Defines the entry point for the console application.
 //
 
-#include <stdio.h>
-#include "bytestream.h"
+#include "stream_of_byte.h"
+#include "stream_of_byte_map.h"
 
 void printf_next(stream_of_byte *stream, byte value) {
 	printf("recieved %d\n", value);
@@ -14,7 +14,7 @@ byte map_2x(byte value) {
 
 int main() {
 	stream_of_byte* stream = stream_of_byte_create();
-	stream_listener_of_byte* listener = stream_listener_of_byte_create();
+	stream_of_byte* listener = stream_of_byte_create();
 	listener->next = printf_next;
 	stream_add_listener(stream, listener);
 	stream_of_byte* mapped_stream = stream_of_byte_map(stream, map_2x);
